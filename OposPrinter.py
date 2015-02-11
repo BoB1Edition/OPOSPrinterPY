@@ -36,7 +36,6 @@ class OposPrinter:
             for conf in confs:
                 interfaces = conf.interfaces()
                 for interface in interfaces:
-                    #print interface
                     if(dev.is_kernel_driver_active(interface.bInterfaceNumber)):
                         dev.detach_kernel_driver(interface.bInterfaceNumber)
             dev.set_configuration()
@@ -44,6 +43,8 @@ class OposPrinter:
     def InitDevice(self):
         for dev in self.devices:
             dev.write(2, chr(0x1B) + chr(40))
+            dev.write(2, chr(0x1b)+chr(0x45)+chr(0x0))
+            dev.write(2, chr(0x1b)+chr(0x2d)+chr(0x0))
 
     def Interfaces(self):
         for dev in self.devices:
@@ -68,15 +69,17 @@ class OposPrinter:
         
     def PrintLine(self, Position=0, Line='', decode='utf-8', encode = 'cp866'):
         for dev in self.devices:
-            dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
+            dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
             dev.write(2, Line.decode(decode).encode(encode))
             dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
+            dev.write(2, chr(0x1b)+chr(0x45)+chr(0x0))
+            dev.write(2, chr(0x0a))
         return
     
-    def PrintBarcode(self, Position=0, Line='', positionHRI = 2,
+    def PrintBarcode(self, Position=1, Line='', positionHRI = 2,
                      height = 130, width = 2, TypeBarcode = 72):
         for dev in self.devices:
-            dev.write(2, chr(0x1B) + chr(0x61) + chr(1))
+            dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
             dev.write(2, chr(0x1d) + chr(0x48) + chr(positionHRI))
             dev.write(2, chr(0x1d) + chr(0x68) + chr(height))
             dev.write(2, chr(0x1d) + chr(0x77) + chr(width))
@@ -105,40 +108,13 @@ class OposPrinter:
         return {'Dots' : dots, "Height":xheight, "Width":xwidth}
     
     def PrintImage(self, Position=0, FileName='enter.bmp'):
-        '''    
-        data = self.GetBitmapData(FileName)
-        self.d = data
-        n1 = data['Width'] % 256
-        n2 = data['Width'] / 256
-        offset = 0
+        FileName = FileName.replace('\\', '/')
+        print 'FileName %s' % FileName
         for dev in self.devices:
-            dev.write(2, chr(0x1b)+chr(0x33)+chr(24))
-            while offset < data['Height']:
-                dev.write(2, chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
-                for x in xrange(data['Width']):
-                    for k in xrange(3):
-                        slices = 0
-                        for b in xrange(8):
-                            y = (((offset/8) +k) * 8) + b
-                            i = (y * data['Width']) + x
-                            v = 0
-                            if(i<len(data['Dots'])):
-                                v = data['Dots'][i]
-                            if v == True:
-                                slices += 1
-                            else:
-                                slices = slices << 1
-                        dev.write(2, chr(slices))
-                    offset += 24
-                    dev.write(2, chr(0x0A))
-            '''
-        for dev in self.devices:
-        #    dev = self.devices[0]
             img = Image.open(FileName)
             n1 = img.size[0] % 256
             n2 = img.size[0] / 256
-        #    self.img = img
-            dev.write(2, chr(0x1b) + '3' + chr(23))
+            dev.write(2, chr(0x1b) + '3' + chr(24))
             for y in xrange(0, img.size[1], 24):
                 dev.write(2, chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 for x in xrange(img.size[0]):
@@ -158,7 +134,6 @@ class OposPrinter:
                                 byte += 1
                             else:
                                 byte = byte << 1
-                        #print byte
                         dev.write(2, chr(byte))
                 dev.write(2, chr(0x0a))
         return
@@ -172,16 +147,5 @@ class OposPrinter:
         for dev in self.devices:
             dev.write(2, chr(0x1b)+chr(0x74)+chr(codepage))
 
-   
 
 device = OposPrinter(idVendor = 0x1d90)
-device.Claim(0)
-device.InitDevice()
-device.SelectCodepage()
-device.PrintLine(0, 'Вот текст вот и печатаем\n')
-device.PrintLine(0, 'Вот текст вот и печатаем\n')
-device.PrintBarcode(0, '123')
-device.PrintBarcode(0, 'COXD-202345')
-device.PrintImage()
-device.PrintLine(0, 'Вот текст вот и печатаем\n')
-device.Cut()
