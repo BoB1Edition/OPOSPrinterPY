@@ -75,12 +75,13 @@ def _print():
             continue
         bc = bc_tag.match(line)
         if bc:
-            device.PrintBarcode(bc.group(1))
+            device.PrintBarcode(1, bc.group(1))
             continue
         if(tag.search(line)):
             for k, v in dict_tag.iteritems():
                 line = line.replace(k, v)
         device.PrintLine(Line = line)
+    print 'Cut'
     device.Cut()           
     return Response(status = 200, response = request.data)
 

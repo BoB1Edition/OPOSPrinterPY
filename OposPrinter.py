@@ -4,7 +4,7 @@
 from usb import core
 import types
 from PIL import Image
-
+import os
 
 class OposPrinter:
     def __init__(self, idVendor = None, idProduct = None):
@@ -77,15 +77,18 @@ class OposPrinter:
         return
     
     def PrintBarcode(self, Position=1, Line='', positionHRI = 2,
-                     height = 130, width = 2, TypeBarcode = 72):
+                     height = 130, width = 2, TypeBarcode = 4):
+        #Line = '{A'+'{1'+'{2'+'{3'+'{4'+Line
+        #Line = Line.replace('O', 'O')
         for dev in self.devices:
             dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
+            dev.write(2, chr(0x1d) + chr(0x66) + chr(0))
             dev.write(2, chr(0x1d) + chr(0x48) + chr(positionHRI))
             dev.write(2, chr(0x1d) + chr(0x68) + chr(height))
             dev.write(2, chr(0x1d) + chr(0x77) + chr(width))
             dev.write(2, chr(0x1d) + chr(0x6b) + chr(TypeBarcode) +
-                      chr(len(Line)) +
-                          Line)
+                      #chr(len(Line)) +
+                          Line+chr(0))
             dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
         return
 
@@ -106,24 +109,42 @@ class OposPrinter:
                 color = img.getpixel((_x,_y))
                 dots.append((color < thr))
         return {'Dots' : dots, "Height":xheight, "Width":xwidth}
+
+    def PrintImage2(self, Position=0, FileName='enter.bmp'):
+        FileName = FileName.replace('\\', os.sep)
+
     
     def PrintImage(self, Position=0, FileName='enter.bmp'):
-        FileName = FileName.replace('\\', '/')
-        print 'FileName %s' % FileName
+        FileName = FileName.replace('\\', os.sep)
+        #fileName, fileExtension = os.path.splitext(FileName)
+        #if os.access(fileName+'.bin',os.R_OK):
+        #    f = file(fileName+'.bin', 'rb')
+        #    for dev in self.devices:
+        #        print 'compile file'
+        #        data = f.read()
+        #        dev(2, data)
+        #else:
+        #    print 'file'
+        #    print fileName
+        #    f = file(fileName+'.bin', 'wb')
         for dev in self.devices:
             img = Image.open(FileName)
             n1 = img.size[0] % 256
             n2 = img.size[0] / 256
-            dev.write(2, chr(0x1b) + '3' + chr(24))
+            dev.write(2, chr(0x1b) + '3' + chr(22))
+    #        f.write(chr(0x1b) + '3' + chr(24))
             for y in xrange(0, img.size[1], 24):
+    #            f.write(chr(0x1B) + chr(0x61) + chr(Position))
+                dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
+    #            f.write(chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 dev.write(2, chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 for x in xrange(img.size[0]):
                     byte = 0
                     for k in xrange(3):
                         byte = 0
                         for i in xrange(8):
-                            if y+i+8*k > img.size[1]-1:
-                                pixel = 0
+                            if y+i+8*k > img.size[1]:
+                                pixel = 255
                             else:
                                 try:
                                     pixel = img.getpixel((x,y+i+8*k))
@@ -134,8 +155,13 @@ class OposPrinter:
                                 byte += 1
                             else:
                                 byte = byte << 1
+                        #f.write(chr(byte))
                         dev.write(2, chr(byte))
+                #f.write(chr(0x0a))
                 dev.write(2, chr(0x0a))
+        #f.write(chr(0x1B) + chr(0x61) + chr(0))
+            dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
+        #f.close()    
         return
     
     def Cut(self, Indent = 10):
