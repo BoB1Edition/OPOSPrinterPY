@@ -143,7 +143,7 @@ class OposPrinter:
                     for k in xrange(3):
                         byte = 0
                         for i in xrange(8):
-                            if y+i+8*k > img.size[1]:
+                            if y+i+8*k > img.size[1] - 1:
                                 pixel = 255
                             else:
                                 try:
@@ -174,4 +174,4 @@ class OposPrinter:
             dev.write(2, chr(0x1b)+chr(0x74)+chr(codepage))
 
 
-device = OposPrinter(idVendor = 0x1d90)
+device = OposPrinter(idVendor = 0x0dd4)

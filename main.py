@@ -34,7 +34,7 @@ def main():
             'port':8088,
             'codepage':'utf8',
             'device': {
-                'idVendor':0x1d90,
+                'idVendor':0x0dd4,
             }
         }
         fp = file('OposServer.json', 'w')
@@ -42,13 +42,14 @@ def main():
         fp.close()
         main()
     global device
-    device = OposPrinter(conf['device']['idVendor'])
     app.add_url_rule('/', view_func=default, methods=['POST','GET'])
     app.add_url_rule('/print', view_func=_print, methods=['POST'])
     app.add_url_rule('/status', view_func=_status, methods=['GET'])
     app.run(port=conf['port'], debug=True)
 
 def default():
+    global device
+    device = OposPrinter(conf['device']['idVendor'])
     if request.method == 'GET':
         return _status()
     if request.method == 'POST':
@@ -60,7 +61,6 @@ def _status():
                     mimetype="application/json")
 def _print():
     global conf
-    global device
     img_tag = re.compile("\[img\](.+)\[/img\]")
     bc_tag = re.compile("\[bc\](.+)\[/bc\]")
     tag = re.compile("\[.+?\]")
