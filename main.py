@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 from flask import Flask, request, Response
 import sys
@@ -42,6 +43,7 @@ def main():
         fp.close()
         main()
     global device
+    device = OposPrinter(conf['device']['idVendor'])
     app.add_url_rule('/', view_func=default, methods=['POST','GET'])
     app.add_url_rule('/print', view_func=_print, methods=['POST'])
     app.add_url_rule('/status', view_func=_status, methods=['GET'])
@@ -49,18 +51,29 @@ def main():
 
 def default():
     global device
-    device = OposPrinter(conf['device']['idVendor'])
     if request.method == 'GET':
         return _status()
     if request.method == 'POST':
         return _print()
 def _status():
     global device
-    return Response(response = 'erwererwe',#device.PrinterState(), #OPOSStatus(),
+    device.Claim(0)
+    device.InitDevice()
+    device = OposPrinter(conf['device']['idVendor'])
+    printstate, printcode = device.PrinterState()
+    print printstate
+    print printcode
+    if(printcode == 15):
+        answer = '{\"code\": 0, \"message\": \"Готов к работе\"\}'
+    else:
+        answer = '{\"code\": 1,\"message\": \"Не Готов к работе\"}'
+    return Response(response = answer,
                     status=200,
-                    mimetype="application/json")
+                    mimetype="application/json; charset=\"utf-8\"")
 def _print():
     global conf
+    global device
+    device = OposPrinter(conf['device']['idVendor'])
     img_tag = re.compile("\[img\](.+)\[/img\]")
     bc_tag = re.compile("\[bc\](.+)\[/bc\]")
     tag = re.compile("\[.+?\]")

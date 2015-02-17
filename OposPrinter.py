@@ -174,4 +174,4 @@ class OposPrinter:
             dev.write(2, chr(0x1b)+chr(0x74)+chr(codepage))
 
 
-device = OposPrinter(idVendor = 0x0dd4)
+#device = OposPrinter(idVendor = 0x0dd4)
