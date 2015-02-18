@@ -44,10 +44,11 @@ def main():
         main()
     global device
     device = OposPrinter(conf['device']['idVendor'])
+    device.Claim(0)
     app.add_url_rule('/', view_func=default, methods=['POST','GET'])
     app.add_url_rule('/print', view_func=_print, methods=['POST'])
     app.add_url_rule('/status', view_func=_status, methods=['GET'])
-    app.run(port=conf['port'], debug=True)
+    app.run(port=conf['port'], debug=True, host='0.0.0.0')
 
 def default():
     global device
@@ -57,27 +58,24 @@ def default():
         return _print()
 def _status():
     global device
-    device.Claim(0)
     device.InitDevice()
-    device = OposPrinter(conf['device']['idVendor'])
-    printstate, printcode = device.PrinterState()
-    print printstate
-    print printcode
-    if(printcode == 15):
-        answer = '{\"code\": 0, \"message\": \"Готов к работе\"\}'
+    printstate = device.PrinterState()
+    print printstate[0]
+    #print printstate[1]
+    if(printstate[0] == 18):
+        answer = '{\"code\": 0, \"message\": \"Готов к работе\"}'
     else:
         answer = '{\"code\": 1,\"message\": \"Не Готов к работе\"}'
     return Response(response = answer,
                     status=200,
                     mimetype="application/json; charset=\"utf-8\"")
+
 def _print():
     global conf
     global device
-    device = OposPrinter(conf['device']['idVendor'])
     img_tag = re.compile("\[img\](.+)\[/img\]")
     bc_tag = re.compile("\[bc\](.+)\[/bc\]")
     tag = re.compile("\[.+?\]")
-    device.Claim(0)
     device.InitDevice()
     device.SelectCodepage()
     for line in request.data.split('\n'):

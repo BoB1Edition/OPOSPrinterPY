@@ -42,7 +42,7 @@ class OposPrinter:
             
     def InitDevice(self):
         for dev in self.devices:
-            dev.write(2, chr(0x1B) + chr(40))
+            dev.write(2, chr(0x1B) + chr(0x40))
             dev.write(2, chr(0x1b)+chr(0x45)+chr(0x0))
             dev.write(2, chr(0x1b)+chr(0x2d)+chr(0x0))
 
@@ -70,6 +70,7 @@ class OposPrinter:
     def PrintLine(self, Position=0, Line='', decode='utf-8', encode = 'cp866'):
         for dev in self.devices:
             dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
+            dev.write(2, chr(0x1b)+chr(0x45)+chr(0x0))
             dev.write(2, Line.decode(decode).encode(encode))
             dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
             dev.write(2, chr(0x1b)+chr(0x45)+chr(0x0))
@@ -114,7 +115,7 @@ class OposPrinter:
         FileName = FileName.replace('\\', os.sep)
 
     
-    def PrintImage(self, Position=0, FileName='enter.bmp'):
+    def PrintImage(self, Position=1, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
         #fileName, fileExtension = os.path.splitext(FileName)
         #if os.access(fileName+'.bin',os.R_OK):
@@ -167,6 +168,7 @@ class OposPrinter:
     def Cut(self, Indent = 10):
         for dev in self.devices:
             dev.write(2, chr(0x1d)+chr(0x56)+chr(65)+chr(Indent))
+
         return
     
     def SelectCodepage(self, codepage = 7):
