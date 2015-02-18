@@ -132,11 +132,12 @@ class OposPrinter:
             img = Image.open(FileName)
             n1 = img.size[0] % 256
             n2 = img.size[0] / 256
+            dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
             dev.write(2, chr(0x1b) + '3' + chr(22))
     #        f.write(chr(0x1b) + '3' + chr(24))
             for y in xrange(0, img.size[1], 24):
     #            f.write(chr(0x1B) + chr(0x61) + chr(Position))
-                dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
+                #dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
     #            f.write(chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 dev.write(2, chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 for x in xrange(img.size[0]):
@@ -161,7 +162,7 @@ class OposPrinter:
                 #f.write(chr(0x0a))
                 dev.write(2, chr(0x0a))
         #f.write(chr(0x1B) + chr(0x61) + chr(0))
-            dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
+        dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
         #f.close()    
         return
     
