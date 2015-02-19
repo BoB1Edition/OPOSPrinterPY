@@ -133,7 +133,7 @@ class OposPrinter:
             n1 = img.size[0] % 256
             n2 = img.size[0] / 256
             dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
-            dev.write(2, chr(0x1b) + '3' + chr(22))
+            dev.write(2, chr(0x1b) + '3' + chr(24))
     #        f.write(chr(0x1b) + '3' + chr(24))
             for y in xrange(0, img.size[1], 24):
     #            f.write(chr(0x1B) + chr(0x61) + chr(Position))
@@ -168,8 +168,9 @@ class OposPrinter:
     
     def Cut(self, Indent = 10):
         for dev in self.devices:
+            dev.write(2, chr(0x1D) + chr(0x65) + chr(0x1) )
             dev.write(2, chr(0x1d)+chr(0x56)+chr(65)+chr(Indent))
-
+            dev.write(2, chr(0x0c))
         return
     
     def SelectCodepage(self, codepage = 7):
@@ -177,4 +178,4 @@ class OposPrinter:
             dev.write(2, chr(0x1b)+chr(0x74)+chr(codepage))
 
 
-#device = OposPrinter(idVendor = 0x0dd4)
+device = OposPrinter(idVendor = 0x0dd4)

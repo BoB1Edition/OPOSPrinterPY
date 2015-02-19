@@ -82,7 +82,7 @@ def _print():
         img = img_tag.match(line)
         if img:
             print img.group(1)
-            device.PrintImage(0, img.group(1))
+            device.PrintImage(1, img.group(1))
             continue
         bc = bc_tag.match(line)
         if bc:
