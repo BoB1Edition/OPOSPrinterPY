@@ -113,45 +113,64 @@ class OposPrinter:
 
     def PrintImage2(self, Position=0, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
-
+        for dev in self.devices:
+            img = img = Image.open(FileName)
+            img = img.convert('1')
+            n1 = 33
+            n2 = 23
+            dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
+            dev.write(2, chr(0x1d) + chr(0x2a) + chr(n1) + chr(n2))
+            for x in xrange(n1*8):
+                #print 'x= %i' % (x)
+                for _n2 in xrange(n2):
+                    #print '_n2= %i' % (_n2)
+                    byte = 0
+                    for i in xrange(8):
+                        y = _n2*8+i
+                        #print 'y= %i' % (y)
+                        try:
+                            if (y > img.size[1]-1) or (x>img.size[0]-1):
+                                pixel = 255
+                            else:
+                                pixel = img.getpixel((x,y))
+                        except:
+                            print 'error (x=%i,y=%i) ' % (x,_y)
+                            pixel = 255
+                        if pixel<127:
+                            byte = byte << 1
+                            byte += 1
+                        else:
+                            byte = byte << 1
+                    dev.write(2, chr(byte))
+            dev.write(2, chr(0x2d)+chr(0x2f)+chr(3))
     
     def PrintImage(self, Position=1, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
-        #fileName, fileExtension = os.path.splitext(FileName)
-        #if os.access(fileName+'.bin',os.R_OK):
-        #    f = file(fileName+'.bin', 'rb')
-        #    for dev in self.devices:
-        #        print 'compile file'
-        #        data = f.read()
-        #        dev(2, data)
-        #else:
-        #    print 'file'
-        #    print fileName
-        #    f = file(fileName+'.bin', 'wb')
         for dev in self.devices:
             img = Image.open(FileName)
+            img = img.convert('1')
             n1 = img.size[0] % 256
             n2 = img.size[0] / 256
             dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
-            dev.write(2, chr(0x1b) + '3' + chr(24))
-    #        f.write(chr(0x1b) + '3' + chr(24))
+            dev.write(2, chr(0x1b) + '3' + chr(40))
+            dev.write(2, chr(0xa)+chr(13))
+            dev.write(2, chr(0x1b) + '0')
             for y in xrange(0, img.size[1], 24):
-    #            f.write(chr(0x1B) + chr(0x61) + chr(Position))
-                #dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
-    #            f.write(chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 dev.write(2, chr(0x1b)+chr(0x2a)+chr(33) + chr(n1) + chr(n2))
                 for x in xrange(img.size[0]):
                     byte = 0
                     for k in xrange(3):
                         byte = 0
                         for i in xrange(8):
-                            if y+i+8*k > img.size[1] - 1:
+                            _y = y+i+8*k
+                            if _y > img.size[1] - 1:
                                 pixel = 255
                             else:
                                 try:
-                                    pixel = img.getpixel((x,y+i+8*k))
+                                    pixel = img.getpixel((x,_y))
                                 except:
-                                    print 'error (x=%i,y=%i) ' % (x,y+i+8*k)
+                                    print 'error (x=%i,y=%i) ' % (x,_y)
+                                    pixel = 255
                             if pixel<127:
                                 byte = byte << 1
                                 byte += 1
@@ -160,7 +179,7 @@ class OposPrinter:
                         #f.write(chr(byte))
                         dev.write(2, chr(byte))
                 #f.write(chr(0x0a))
-                dev.write(2, chr(0x0a))
+                dev.write(2, chr(0xa)+chr(13))
         #f.write(chr(0x1B) + chr(0x61) + chr(0))
         dev.write(2, chr(0x1B) + chr(0x61) + chr(0))
         #f.close()    
@@ -168,7 +187,7 @@ class OposPrinter:
     
     def Cut(self, Indent = 10):
         for dev in self.devices:
-            dev.write(2, chr(0x1D) + chr(0x65) + chr(0x1) )
+            #dev.write(2, chr(0x1D) + chr(0x65) + chr(0x1) )
             dev.write(2, chr(0x1d)+chr(0x56)+chr(65)+chr(Indent))
             dev.write(2, chr(0x0c))
         return
@@ -179,3 +198,7 @@ class OposPrinter:
 
 
 device = OposPrinter(idVendor = 0x0dd4)
+device.Claim(0)
+device.InitDevice()
+device.PrintImage2(FileName = 'icons/enter.bmp')
+device.Cut()
