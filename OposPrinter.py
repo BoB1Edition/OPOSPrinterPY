@@ -5,6 +5,7 @@ from usb import core
 import types
 from PIL import Image
 import os
+import platform
 
 class OposPrinter:
     def __init__(self, idVendor = None, idProduct = None):
@@ -31,15 +32,18 @@ class OposPrinter:
         self.devices = devs
 
     def Claim(self, timeout):
-        for dev in self.devices:
-            confs = dev.configurations()
-            for conf in confs:
-                interfaces = conf.interfaces()
-                for interface in interfaces:
-                    if(dev.is_kernel_driver_active(interface.bInterfaceNumber)):
-                        dev.detach_kernel_driver(interface.bInterfaceNumber)
-            dev.set_configuration()
-            
+        self._platform = platform.platform()
+        if 'Windows' not in self._platform: 
+            for dev in self.devices:
+                confs = dev.configurations()
+                for conf in confs:
+                    interfaces = conf.interfaces()
+                    for interface in interfaces:
+                        if(dev.is_kernel_driver_active(interface.bInterfaceNumber)):
+                            dev.detach_kernel_driver(interface.bInterfaceNumber)
+                if 'Darwin' not in self._platform:
+                    dev.set_configuration()
+                
     def InitDevice(self):
         for dev in self.devices:
             dev.write(2, chr(0x1B) + chr(0x40))
@@ -64,7 +68,10 @@ class OposPrinter:
         State = ('B', 255)
         for dev in self.devices:
             dev.write(2, chr(0x10) + chr(0x4) + chr(3))
-            State = dev.read(0x81, 1)
+            if 'Darwin' not in self._platform:
+                State = dev.read(0x81, 1)
+            else:
+                State = ('B', 18)
         return State
         
     def PrintLine(self, Position=0, Line='', decode='utf-8', encode = 'cp866'):
@@ -116,11 +123,14 @@ class OposPrinter:
         for dev in self.devices:
             img = img = Image.open(FileName)
             img = img.convert('1')
-            n1 = 33
-            n2 = 23
+            n1 = 10
+            n2 = 5
             dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
             dev.write(2, chr(0x1d) + chr(0x2a) + chr(n1) + chr(n2))
             for x in xrange(n1*8):
+                for y in xrange(n2):
+                    dev.write(2, 'J')
+                """
                 #print 'x= %i' % (x)
                 for _n2 in xrange(n2):
                     #print '_n2= %i' % (_n2)
@@ -142,7 +152,8 @@ class OposPrinter:
                         else:
                             byte = byte << 1
                     dev.write(2, chr(byte))
-            dev.write(2, chr(0x2d)+chr(0x2f)+chr(3))
+                    """
+            dev.write(2, chr(0x2d)+chr(0x2f)+chr(0))
     
     def PrintImage(self, Position=1, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
@@ -196,9 +207,3 @@ class OposPrinter:
         for dev in self.devices:
             dev.write(2, chr(0x1b)+chr(0x74)+chr(codepage))
 
-
-device = OposPrinter(idVendor = 0x0dd4)
-device.Claim(0)
-device.InitDevice()
-device.PrintImage2(FileName = 'icons/enter.bmp')
-device.Cut()
