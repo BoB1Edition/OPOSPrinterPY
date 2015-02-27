@@ -116,6 +116,22 @@ class OposPrinter:
         for dev in self.devices:
             img = img = Image.open(FileName)
             img = img.convert('1')
+            n1 = 8
+            n2 = 8
+            dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
+            dev.write(2, chr(0x1d) + chr(0x2a) + chr(n1) + chr(n2))
+            byte = 0b10000000
+            for j in xrange(8*8):
+                for i in xrange(8):
+                    dev.write(2, chr(byte))
+                    if byte == 0:
+                        byte = 0b10000000
+                        continue
+                    byte = byte >> 1
+            #dev.write(2, n1*n2*8)
+            dev.write(2, chr(0x1d) + chr(0x2f) + chr(1))
+
+        """
             n1 = 33
             n2 = 23
             dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
@@ -143,6 +159,7 @@ class OposPrinter:
                             byte = byte << 1
                     dev.write(2, chr(byte))
             dev.write(2, chr(0x2d)+chr(0x2f)+chr(3))
+            """
     
     def PrintImage(self, Position=1, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
