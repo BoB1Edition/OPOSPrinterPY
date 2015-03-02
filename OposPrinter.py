@@ -131,10 +131,10 @@ class OposPrinter:
             dev.write(2, chr(0x1d) + chr(0x2a) + chr(n1) + chr(n2))
             print img.size[0]
             print img.size[1]
-            for x in xrange(n1*8):
+            for y in xrange(n1*8):
                 byte = 0
                 i = 0
-                for y in xrange(n2*8):
+                for x in xrange(n2*8):
                     if x > img.size[0]-1 or y > img.size[1]-1:
                         #print 'pixel'
                         pixel = 255
