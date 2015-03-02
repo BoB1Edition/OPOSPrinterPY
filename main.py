@@ -6,7 +6,6 @@ import sys
 import usb
 from OposPrinter import *
 import re
-import platform
 import getopt
 import os
 import json
@@ -73,6 +72,7 @@ def _status():
 def _print():
     global conf
     global device
+    #print request.headers
     img_tag = re.compile("\[img\](.+)\[/img\]")
     bc_tag = re.compile("\[bc\](.+)\[/bc\]")
     tag = re.compile("\[.+?\]")
