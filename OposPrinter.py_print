@@ -128,19 +128,19 @@ class OposPrinter:
             for x in xrange(n1*8):
                 i = 0
                 for y in xrange(n2*8):
+                    i += 1
                     try:
                         pixel = img.getpixel((x,y))
                     except:
-                        print 'error (%i,%i)' % (x,y)
+                        #print 'error (%i,%i)' % (x,y)
                         pixel = 255
-                    if pixel < 1:
+                    if pixel < 127:
                         byte = byte << 1
                         byte += 1
                         tmpfile.write("1")
                     else:
                         byte << 1
                         tmpfile.write("0")
-                    i += 1
                     if i > 7:
                         dev.write(2, chr(byte))
                         byte = 0
