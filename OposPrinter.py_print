@@ -126,7 +126,6 @@ class OposPrinter:
             dev.write(2, chr(0x1d) + chr(0x2a) + chr(n1) + chr(n2))
             byte = 0
             for x in xrange(n1*8):
-                i = 0
                 for y in xrange(n2):
                     byte = 0
                     for i in xrange(8):
@@ -158,7 +157,24 @@ class OposPrinter:
             yL = img.size[1] % 256
             yH = img.size[1] / 256
             dev.write(2, chr(0x1d) + chr(0x76) + chr(0x30) + chr(m) + chr(xL) + chr(xH) + chr(yL) + chr(yH))
-            for x in xrange(img.size[0])
+            for x in xrange(img.size[0]):
+                for y in xrange(0, img.size[1], 8):
+                    byte = 0
+                    for i in xrange(8):
+                        try:
+                            pixel = img.getpixel((x,y))
+                        except:
+                            print 'error (x=%i,y=%i) ' % (x,y)
+                            pixel = 255
+                    if pixel<127:
+                        byte = byte << 1
+                        byte += 1
+                    else:
+                        byte = byte << 1
+                #f.write(chr(byte))
+                dev.write(2, chr(byte))
+
+
             #<1D>H<76>H<30>H<m><xL><xH><yL><yH> [<d>] k
             
     
@@ -235,5 +251,5 @@ device = OposPrinter(idVendor = 0x0dd4)
 device.Claim(0)
 device.InitDevice()
 device.PrintImage2(FileName = 'icons/enter.bmp')
-device.PrintImage2(FileName = 'icons/enter.bmp')
+device.PrintImage3(FileName = 'icons/enter.bmp')
 device.Cut()
