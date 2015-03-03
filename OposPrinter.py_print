@@ -116,7 +116,7 @@ class OposPrinter:
 
     def PrintImage2(self, Position=0, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
-        tmpfile = file(self.RandomName()+'.bin', 'w')
+        #tmpfile = file(self.RandomName()+'.bin', 'w')
         for dev in self.devices:
             img = img = Image.open(FileName)
             img = img.convert('1')
@@ -127,58 +127,40 @@ class OposPrinter:
             byte = 0
             for x in xrange(n1*8):
                 i = 0
-                for y in xrange(n2*8):
-                    i += 1
-                    try:
-                        pixel = img.getpixel((x,y))
-                    except:
-                        #print 'error (%i,%i)' % (x,y)
-                        pixel = 255
-                    if pixel < 127:
-                        byte = byte << 1
-                        byte += 1
-                        tmpfile.write("1")
-                    else:
-                        byte << 1
-                        tmpfile.write("0")
-                    if i > 7:
-                        dev.write(2, chr(byte))
-                        byte = 0
-                        i = 0
-                tmpfile.write("\n")
-            #dev.write(2, n1*n2*8)
-            tmpfile.close()
-            dev.write(2, chr(0x1d) + chr(0x2f) + chr(0))
-
-        """
-            n1 = 33
-            n2 = 23
-            dev.write(2, chr(0x1B) + chr(0x61) + chr(Position))
-            dev.write(2, chr(0x1d) + chr(0x2a) + chr(n1) + chr(n2))
-            for x in xrange(n1*8):
-                #print 'x= %i' % (x)
-                for _n2 in xrange(n2):
-                    #print '_n2= %i' % (_n2)
+                for y in xrange(n2):
                     byte = 0
                     for i in xrange(8):
-                        y = _n2*8+i
-                        #print 'y= %i' % (y)
                         try:
-                            if (y > img.size[1]-1) or (x>img.size[0]-1):
-                                pixel = 255
-                            else:
-                                pixel = img.getpixel((x,y))
+                            pixel = img.getpixel((x, y*8+i))
                         except:
-                            print 'error (x=%i,y=%i) ' % (x,_y)
                             pixel = 255
-                        if pixel<127:
+                        if pixel < 127:
                             byte = byte << 1
                             byte += 1
+                            #tmpfile.write("1")
                         else:
-                            byte = byte << 1
+                            byte << 1
+                            #tmpfile.write("0")
                     dev.write(2, chr(byte))
-            dev.write(2, chr(0x2d)+chr(0x2f)+chr(3))
-            """
+                #tmpfile.write("\n")
+            #dev.write(2, n1*n2*8)
+            #tmpfile.close()
+            dev.write(2, chr(0x1d) + chr(0x2f) + chr(48))
+
+    def PrintImage3(self, Position=1, FileName='enter.bmp'):
+        FileName = FileName.replace('\\', os.sep)
+        for dev in self.devices:
+            img = Image.open(FileName)
+            img = img.convert('1')
+            m = 0
+            xL = img.size[0] % 256
+            xH = img.size[0] / 256
+            yL = img.size[1] % 256
+            yH = img.size[1] / 256
+            dev.write(2, chr(0x1d) + chr(0x76) + chr(0x30) + chr(m) + chr(xL) + chr(xH) + chr(yL) + chr(yH))
+            for x in xrange(img.size[0])
+            #<1D>H<76>H<30>H<m><xL><xH><yL><yH> [<d>] k
+            
     
     def PrintImage(self, Position=1, FileName='enter.bmp'):
         FileName = FileName.replace('\\', os.sep)
@@ -252,5 +234,6 @@ class OposPrinter:
 device = OposPrinter(idVendor = 0x0dd4)
 device.Claim(0)
 device.InitDevice()
+device.PrintImage2(FileName = 'icons/enter.bmp')
 device.PrintImage2(FileName = 'icons/enter.bmp')
 device.Cut()
