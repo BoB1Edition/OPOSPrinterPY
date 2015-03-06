@@ -66,8 +66,8 @@ class OposPrinter:
         '''
         State = ('B', 255)
         for dev in self.devices:
-            dev.write(2, chr(0x10) + chr(0x4) + chr(3))
-            State = dev.read(0x81, 1)
+            dev.write(2, chr(0x10) + chr(0x4) + chr(3), 5)
+            State = dev.read(0x81, 1, 10)
         return State
         
     def PrintLine(self, Position=0, Line='', decode='utf-8', encode = 'cp866'):
@@ -140,7 +140,10 @@ class OposPrinter:
                         else:
                             byte << 1
                             #tmpfile.write("0")
-                    dev.write(2, chr(byte))
+                    if dev.write(2, chr(byte), 10) == 1:
+                        print 'PrintImage2 byte write'
+                    else:
+                        print 'PrintImage2 byte not write'
                 #tmpfile.write("\n")
             #dev.write(2, n1*n2*8)
             #tmpfile.close()
@@ -166,13 +169,18 @@ class OposPrinter:
                         except:
                             print 'error (x=%i,y=%i) ' % (x,y)
                             pixel = 255
-                    if pixel<127:
-                        byte = byte << 1
-                        byte += 1
-                    else:
-                        byte = byte << 1
+                        if pixel<127:
+                            byte = byte << 1
+                            byte += 1
+                        else:
+                            byte = byte << 1
+                        #print 'byte: %i, pixel: %i' % (byte, pixel)
                 #f.write(chr(byte))
-                dev.write(2, chr(byte))
+                    #print '----byte: %i' % byte
+                    if dev.write(2, chr(byte), 10) == 1:
+                        print 'PrintImage2 byte write'
+                    else:
+                        print 'PrintImage2 byte not write'
 
 
             #<1D>H<76>H<30>H<m><xL><xH><yL><yH> [<d>] k
@@ -211,7 +219,10 @@ class OposPrinter:
                             else:
                                 byte = byte << 1
                         #f.write(chr(byte))
-                        dev.write(2, chr(byte))
+                        if dev.write(2, chr(byte), 10) == 1:
+                            print 'PrintImage2 byte write'
+                        else:
+                            print 'PrintImage2 byte not write'
                 #f.write(chr(0x0a))
                 dev.write(2, chr(0xa)+chr(13))
         #f.write(chr(0x1B) + chr(0x61) + chr(0))
@@ -250,6 +261,7 @@ class OposPrinter:
 device = OposPrinter(idVendor = 0x0dd4)
 device.Claim(0)
 device.InitDevice()
+device.PrintImage(FileName = 'icons/enter.bmp')
 device.PrintImage2(FileName = 'icons/enter.bmp')
 device.PrintImage3(FileName = 'icons/enter.bmp')
 device.Cut()
